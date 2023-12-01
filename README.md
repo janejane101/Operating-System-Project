@@ -38,6 +38,102 @@ Syn_Producer_Consumer.c: 동기화 기능이 추가된 producer-consumer 프로�
 
 *****
 
+### 4. 코드
+
+<Producer_Consumer.c>
+```
+/* Producer & Consumer without Synchronization */
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+#include <semaphore.h>
+#include <unistd.h>
+#define BUFFER_SIZE 20
+void *producer(void* arg);
+void *consumer(void* arg);
+
+int buffer[BUFFER_SIZE] = {0};
+int in = 0;
+int out = 0;
+int counter = 0;
+int next_produced = 0;
+int next_consumed;
+
+
+int main()
+{
+
+    int pId, cId;
+    pthread_t p[3];
+    pthread_t c[3];
+
+    printf("**********영업 시작**********\n");
+    
+    for(int i = 0; i < 3; i++)
+    {
+        pId = pthread_create(&p[i],NULL,(void *)producer,(void*)&i);
+
+        if(pId < 0){
+            perror("thread create error : ");
+            exit(0);
+        }    
+
+        cId = pthread_create(&c[i],NULL,(void *)consumer,(void*)&i);
+
+        if(cId < 0){
+            perror("thread create error : ");
+            exit(0);
+        }
+
+    }
+    
+    for(int i = 0; i < 3; i++)
+    {
+        pthread_join(p[i],NULL);
+        pthread_join(c[i],NULL);
+    }
+
+    printf("**********영업 끝**********\n");
+
+    return 0;
+}
+
+
+// 음식을 요리사에게 주문하는 producer 함수 
+void *producer(void* arg)
+{
+    
+    for(int i=0; i<4; i++){
+        buffer[in] = next_produced;
+
+        printf("%d번째 주문을 %d번 요리사에게 전달\n", next_produced, in);
+
+        in = (in + 1) % BUFFER_SIZE;
+        next_produced++;
+        sleep(1);
+        counter++;
+    }
+    
+}
+
+
+// 주문된 내역을 요리사가 조리하는 consumer 함수 
+void *consumer(void* arg)
+{
+    
+    for(int i=0; i<4; i++){
+        next_consumed=buffer[out];
+
+        printf("%d번째 주문을 %d번 요리사가 조리\n", next_consumed, out);
+
+        out = (out + 1) % BUFFER_SIZE;
+        sleep(1);
+        counter--;
+    }
+
+}
+```
 ## Reader-Writer 프로그램
 
 ### 1. 프로그램 소개
